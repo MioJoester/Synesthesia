@@ -19,6 +19,7 @@ The project supports both **file-based audio visualization** and **live micropho
 
 ### Mic-based Visualizer
 <img src="/Asset/mic.png" />
+
 - Uses live microphone input
 - Real-time response to voice, claps, or ambient sound
 - Requires HTTPS or localhost due to browser security policies

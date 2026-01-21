@@ -8,6 +8,8 @@ The project supports both **file-based audio visualization** and **live micropho
 
 ## Modes
 
+<img src="/Asset/file.png" />
+
 ### File-based Visualizer
 - Drag and drop MP3 or audio files
 - Frequency analysis using the Web Audio API

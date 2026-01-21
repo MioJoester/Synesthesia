@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Synesthesia — Mic Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+  <style>
+    canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-white overflow-hidden">
+
+
+<div class="fixed top-6 left-1/2 -translate-x-1/2 z-30
+            px-6 py-3 rounded-full
+            bg-white/5 backdrop-blur
+            border border-white/10
+            text-sm tracking-wide text-white/70">
+  Synesthesia · Mic
+</div>
+
+
+<div class="fixed left-4 top-1/2 -translate-y-1/2 z-30
+            w-56 p-4 rounded-xl
+            bg-white/5 backdrop-blur
+            border border-white/10
+            text-sm space-y-4 text-white/70">
+
+  <div class="text-white/90">Live Input</div>
+  <div>Status: <span id="micStatus" class="text-white/50">Idle</span></div>
+  <div class="text-xs text-white/50">
+    Uses your microphone<br>
+    Real-time audio
+  </div>
+
+  <button id="micBtn"
+          class="w-full py-2 rounded-lg
+                 bg-white/10 hover:bg-white/20
+                 border border-white/10
+                 text-xs transition">
+    Enable Mic
+  </button>
+</div>
+
+
+<div class="fixed right-4 top-1/2 -translate-y-1/2 z-30
+            w-44 space-y-4">
+
+  <div class="p-3 rounded-xl bg-white/5 backdrop-blur border border-white/10
+              text-xs space-y-3 text-white/60">
+    <div class="text-white/80">Particle Color</div>
+    <div class="grid grid-cols-4 gap-2">
+      <button class="w-5 h-5 rounded-full bg-white" data-color="#ffffff"></button>
+      <button class="w-5 h-5 rounded-full bg-cyan-400" data-color="#22d3ee"></button>
+      <button class="w-5 h-5 rounded-full bg-purple-400" data-color="#c084fc"></button>
+      <button class="w-5 h-5 rounded-full bg-pink-400" data-color="#f472b6"></button>
+      <button class="w-5 h-5 rounded-full bg-green-400" data-color="#4ade80"></button>
+      <button class="w-5 h-5 rounded-full bg-yellow-400" data-color="#facc15"></button>
+      <button class="w-5 h-5 rounded-full bg-red-400" data-color="#f87171"></button>
+      <button class="w-5 h-5 rounded-full bg-blue-400" data-color="#60a5fa"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const ctx = new AudioCtx();
+const analyser = ctx.createAnalyser();
+analyser.fftSize = 2048;
+
+const data = new Uint8Array(analyser.frequencyBinCount);
+let micStream = null;
+let micSource = null;
+
+const statusEl = document.getElementById("micStatus");
+
+async function enableMic() {
+  if (micStream) return;
+
+  await ctx.resume();
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  micSource = ctx.createMediaStreamSource(micStream);
+  micSource.connect(analyser);
+
+  statusEl.textContent = "Active";
+}
+
+document.getElementById("micBtn").onclick = enableMic;
+
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  65,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.z = 55;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+
+const COUNT = 4000;
+const geometry = new THREE.BufferGeometry();
+const base = new Float32Array(COUNT * 3);
+const pos = new Float32Array(COUNT * 3);
+
+for (let i = 0; i < COUNT; i++) {
+  const r = 18 + Math.random() * 8;
+  const t = Math.random() * Math.PI * 2;
+  const p = Math.acos(2 * Math.random() - 1);
+
+  const x = r * Math.sin(p) * Math.cos(t);
+  const y = r * Math.sin(p) * Math.sin(t);
+  const z = r * Math.cos(p);
+
+  base.set([x, y, z], i * 3);
+  pos.set([x, y, z], i * 3);
+}
+
+geometry.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+
+const material = new THREE.PointsMaterial({
+  color: 0xffffff,
+  size: 0.18,
+  transparent: true,
+  opacity: 0.75
+});
+
+const particles = new THREE.Points(geometry, material);
+scene.add(particles);
+
+
+document.querySelectorAll("[data-color]").forEach(btn => {
+  btn.onclick = () => material.color.set(btn.dataset.color);
+});
+
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (micSource) {
+    analyser.getByteFrequencyData(data);
+
+    let bass = 0;
+    for (let i = 0; i < data.length * 0.15; i++) bass += data[i];
+    bass /= data.length * 0.15;
+
+    for (let i = 0; i < COUNT; i++) {
+      const f = data[i % data.length] / 255;
+      const w = Math.sin(performance.now() * 0.002 + i) * f * 2;
+
+      pos[i * 3]     = base[i * 3]     * (1 + bass * 0.002) + w;
+      pos[i * 3 + 1] = base[i * 3 + 1] * (1 + bass * 0.002) + w;
+      pos[i * 3 + 2] = base[i * 3 + 2] * (1 + bass * 0.002) + w;
+    }
+
+    geometry.attributes.position.needsUpdate = true;
+    particles.rotation.y += 0.0006;
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>

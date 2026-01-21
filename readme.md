@@ -8,14 +8,17 @@ The project supports both **file-based audio visualization** and **live micropho
 
 ## Modes
 
-<img src="/Asset/file.png" />
+
 
 ### File-based Visualizer
+<img src="/Asset/file.png" />
+
 - Drag and drop MP3 or audio files
 - Frequency analysis using the Web Audio API
 - Ideal for offline experimentation
 
 ### Mic-based Visualizer
+<img src="/Asset/mic.png" />
 - Uses live microphone input
 - Real-time response to voice, claps, or ambient sound
 - Requires HTTPS or localhost due to browser security policies

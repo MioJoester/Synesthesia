@@ -1,0 +1,25 @@
+{
+    "name": "Synesthesia",
+    "short_name": "Synesthesia",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "description": "Synesthesia is an experimental, open-source audio visualization project that transforms sound into motion",
+    "icons": [
+        {
+            "src": "https://raw.githubusercontent.com/MioJoester/3D-Solar/refs/heads/main/asset/ORBIT.jpg",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "https://raw.githubusercontent.com/MioJoester/3D-Solar/refs/heads/main/asset/ORBIT.jpg",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "orientation": "any"
+}
